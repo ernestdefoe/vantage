@@ -22,6 +22,7 @@ use ErnestDefoe\Vantage\Tracking\RequestHolder;
 use ErnestDefoe\Vantage\Tracking\Visitor;
 use Flarum\Api\Context;
 use Flarum\Api\Endpoint;
+use Flarum\Api\Resource\DiscussionResource;
 use Flarum\Api\Resource\ForumResource;
 use Flarum\Api\Resource\PostResource;
 use Flarum\Api\Resource\UserResource;
@@ -93,7 +94,9 @@ return [
             Schema\Integer::make('vantageViews')
                 ->nullable()
                 ->visible(function (Post $post, Context $context) {
-                    if (! $post instanceof CommentPost) {
+                    // Not on the discussion list: it carries first and most
+                    // relevant posts, and never shows their views.
+                    if (! $post instanceof CommentPost || $context->listing(DiscussionResource::class)) {
                         return false;
                     }
 
