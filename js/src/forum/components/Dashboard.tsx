@@ -54,6 +54,13 @@ export default class Dashboard extends Component<{ user: any }> {
   oninit(vnode: any) {
     super.oninit(vnode);
     if (!RANGES.includes(this.range)) this.range = 28;
+
+    // A guest following a link to someone's Stats: nothing to ask the server.
+    if (!app.session.user) {
+      this.locked = [];
+      return;
+    }
+
     this.load();
   }
 
