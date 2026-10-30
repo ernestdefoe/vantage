@@ -1,6 +1,10 @@
 // Every colour comes from Flarum's own CSS properties, so light, dark and
-// themed forums all work. The six series colours are mid-tones that read on
-// both light and dark backgrounds; the first is the forum's own colour.
+// themed forums all work, except the chart's six series colours.
+//
+// 🚨 Those are a fixed palette, NOT the forum's primary colour: on a forum
+// whose primary is teal, "Views" in the primary and "Engagements" in teal
+// were the same line. Six hues far apart, mid-tones that read on light and
+// dark backgrounds alike.
 
 .CommentPost .item-vantageViews,
 .Post-footer .VantageViews {
@@ -10,12 +14,12 @@
 }
 
 .Vantage {
-  --vantage-s0: var(--primary-color);
-  --vantage-s1: #0d9488;
-  --vantage-s2: #d97706;
-  --vantage-s3: #db2777;
-  --vantage-s4: #7c3aed;
-  --vantage-s5: #16a34a;
+  --vantage-s0: #4f6bed;
+  --vantage-s1: #e8590c;
+  --vantage-s2: #0d9488;
+  --vantage-s3: #d6336c;
+  --vantage-s4: #9c6ade;
+  --vantage-s5: #74a12e;
   --vantage-up: #15803d;
   --vantage-down: #dc2626;
   color: var(--text-color);
