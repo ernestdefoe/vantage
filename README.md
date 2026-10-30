@@ -13,6 +13,18 @@ Everyone gets a view count under each post. The groups you choose also get a ful
 - **Your audience:** countries, and age and gender if you turn that on (see Privacy).
 - **Export** to CSV or JSON.
 
+![The Stats tab](screenshots/dashboard.png)
+
+Views under each post, for everyone:
+
+![Views under a post](screenshots/post-views.png)
+
+It works on phones and in dark mode, and a member without access sees what they'd get and which groups have it:
+
+![The Stats tab in dark mode](screenshots/dashboard-dark.png)
+
+![The locked Stats tab](screenshots/locked.png)
+
 Followers come from [Follow Users](https://github.com/imorland/follow-users), likes from Likes, reactions from FoF Reactions, bookmarks from FoF Bookmarks and reposts from Moments. Each one appears when its extension is enabled. These already have dates, so their history goes back to day one. Views, profile visits, shares and unfollows are counted from the day Vantage is installed.
 
 ## Who sees what
