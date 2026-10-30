@@ -395,8 +395,8 @@ class Report
 
     /**
      * The member's posts that did best in the period: most likes and
-     * reactions received in it, topped up with the most-viewed posts written
-     * in it. Loaded through `whereVisibleTo` so a dashboard never shows a
+     * reactions received in it, topped up with their most-viewed posts that
+     * were read in it (a post read this week counts, whenever it was written). Loaded through `whereVisibleTo` so a dashboard never shows a
      * post its viewer couldn't open.
      *
      * @return list<array<string, mixed>>
@@ -431,10 +431,15 @@ class Report
         $ids = array_slice(array_keys($scores), 0, 5);
 
         if (count($ids) < 5) {
-            $more = $this->db->table('vantage_post_views')
+            $read = $this->db->table('vantage_daily')
+                ->where('user_id', $u)
+                ->where('metric', Recorder::IMPRESSION)
+                ->where('day', '>=', $start->toDateString())
+                ->exists();
+
+            $more = ! $read ? [] : $this->db->table('vantage_post_views')
                 ->join('posts', 'posts.id', '=', 'vantage_post_views.post_id')
                 ->where('posts.user_id', $u)
-                ->where('posts.created_at', '>=', $start->toDateTimeString())
                 ->whereNotIn('posts.id', $ids ?: [0])
                 ->orderByDesc('vantage_post_views.views')
                 ->limit(5 - count($ids))

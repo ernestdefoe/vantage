@@ -14,15 +14,17 @@ let pending: Pending | null = null;
 const profilesSent = new Set<string>();
 
 function post(body: Record<string, unknown>) {
+  const url = app.forum.attribute<string>('apiUrl') + '/vantage/hit';
+  const json = JSON.stringify(body);
+
   try {
-    // keepalive lets the request finish while the page is closing.
-    fetch(app.forum.attribute<string>('apiUrl') + '/vantage/hit', {
-      method: 'POST',
-      keepalive: true,
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': app.session.csrfToken || '' },
-      body: JSON.stringify(body),
-    }).catch(() => {});
+    // sendBeacon is the one request a closing page reliably finishes. The
+    // endpoint needs no CSRF header (see extend.php), so it can be used.
+    if (navigator.sendBeacon?.(url, new Blob([json], { type: 'application/json' }))) return;
+
+    fetch(url, { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: json }).catch(
+      () => {}
+    );
   } catch (e) {
     // Counting must never break the page.
   }

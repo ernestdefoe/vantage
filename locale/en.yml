@@ -65,17 +65,17 @@ ernestdefoe-vantage:
       type: Kind
       posts: Posts written
       impressions: Views
-      engagements: Likes, reactions and bookmarks
+      engagements: Engagements
       rate: Rate
       text: Text
       image: Image
       video: Video
-      note: Views by kind cover the last 90 days at most.
+      note: Engagements here are likes, reactions and bookmarks. Views by kind cover the last 90 days at most.
 
     top:
       title: Your top posts
       empty: No posts with views or reactions in this period yet.
-      views: "{count, plural, one {# view} other {# views}}"
+      views: "{count, plural, one {# view} other {# views}} in all"
       reactions: "{count, plural, one {# like or reaction} other {# likes and reactions}}"
       in: "in {title}"
 
