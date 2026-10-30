@@ -1,0 +1,93 @@
+{
+    "name": "ernestdefoe/vantage",
+    "description": "Vantage — account analytics for every member: impressions, engagement, profile visits, followers, best times, content types and audience, over rolling periods, with export. Free per-post views for everyone; the full dashboard for the groups you choose.",
+    "keywords": [
+        "flarum",
+        "flarum-extension",
+        "analytics",
+        "statistics",
+        "insights",
+        "profile"
+    ],
+    "type": "flarum-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ernest Defoe",
+            "email": "ernestdefoe@gmail.com"
+        }
+    ],
+    "homepage": "https://github.com/ernestdefoe/vantage",
+    "support": {
+        "issues": "https://github.com/ernestdefoe/vantage/issues",
+        "source": "https://github.com/ernestdefoe/vantage"
+    },
+    "funding": [
+        {
+            "type": "other",
+            "url": "https://buymeacoffee.com/ernestdefoe"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "flarum/core": "^2.0",
+        "maxmind-db/reader": "^1.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "ErnestDefoe\\Vantage\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ErnestDefoe\\Vantage\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Vantage",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-chart-line",
+                "backgroundColor": "#4338ca",
+                "color": "#fff"
+            },
+            "optional-dependencies": [
+                "flarum/likes",
+                "flarum/mentions",
+                "flarum/gdpr",
+                "fof/reactions",
+                "fof/bookmarks",
+                "ianm/follow-users",
+                "ernestdefoe/moments"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "require-dev": {
+        "flarum/gdpr": "^2.0",
+        "flarum/likes": "^2.0",
+        "flarum/mentions": "^2.0",
+        "flarum/phpstan": "^2.0",
+        "flarum/testing": "^2.0",
+        "ianm/follow-users": "^2.0"
+    },
+    "scripts": {
+        "test": [
+            "@test:integration"
+        ],
+        "test:integration": "phpunit -c tests/phpunit.integration.xml",
+        "test:setup": "@php tests/integration/setup.php",
+        "analyse:phpstan": "phpstan analyse"
+    },
+    "scripts-descriptions": {
+        "test": "Runs all tests.",
+        "test:integration": "Runs all integration tests.",
+        "test:setup": "Sets up a database for use with integration tests. Execute this only once.",
+        "analyse:phpstan": "Run static analysis"
+    },
+    "minimum-stability": "beta",
+    "prefer-stable": true
+}

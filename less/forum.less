@@ -1,0 +1,493 @@
+// Every colour comes from Flarum's own CSS properties, so light, dark and
+// themed forums all work. The six series colours are mid-tones that read on
+// both light and dark backgrounds; the first is the forum's own colour.
+
+.CommentPost .item-vantageViews,
+.Post-footer .VantageViews {
+  color: var(--muted-color);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.Vantage {
+  --vantage-s0: var(--primary-color);
+  --vantage-s1: #0d9488;
+  --vantage-s2: #d97706;
+  --vantage-s3: #db2777;
+  --vantage-s4: #7c3aed;
+  --vantage-s5: #16a34a;
+  --vantage-up: #15803d;
+  --vantage-down: #dc2626;
+  color: var(--text-color);
+  min-width: 0;
+
+  [data-series='0'] { --vantage-c: var(--vantage-s0); }
+  [data-series='1'] { --vantage-c: var(--vantage-s1); }
+  [data-series='2'] { --vantage-c: var(--vantage-s2); }
+  [data-series='3'] { --vantage-c: var(--vantage-s3); }
+  [data-series='4'] { --vantage-c: var(--vantage-s4); }
+  [data-series='5'] { --vantage-c: var(--vantage-s5); }
+
+  h2, h3, h4 {
+    color: var(--text-color);
+  }
+
+  a {
+    color: var(--link-color, var(--primary-color));
+  }
+}
+
+.Vantage-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.Vantage-title {
+  margin: 0;
+  font-size: 18px;
+  min-width: 0;
+}
+
+.Vantage-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.Vantage-since,
+.Vantage-help,
+.Vantage-empty,
+.Vantage-credit,
+.Vantage-error {
+  color: var(--muted-color);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.Vantage-credit {
+  margin: 10px 0 0;
+  font-size: 11px;
+
+  a {
+    color: var(--muted-color);
+  }
+}
+
+.Vantage-body.is-loading {
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.Vantage-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(~"min(160px, 100%)", 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.Vantage-tile {
+  background: var(--control-bg);
+  border-radius: var(--border-radius, 6px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.Vantage-tileLabel {
+  color: var(--muted-color);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.Vantage-tileValue {
+  color: var(--text-color);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.Vantage-tileDetail {
+  color: var(--muted-color);
+  font-size: 12px;
+}
+
+.Vantage-change {
+  color: var(--muted-color);
+  font-size: 12px;
+  font-weight: 600;
+
+  &.is-up { color: var(--vantage-up); }
+  &.is-down { color: var(--vantage-down); }
+}
+
+.Vantage-card {
+  border: 1px solid var(--control-bg);
+  border-radius: var(--border-radius, 6px);
+  padding: 14px;
+  margin-bottom: 14px;
+  min-width: 0;
+}
+
+.Vantage-cardTitle {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.Vantage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.Vantage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--control-bg);
+  background: transparent;
+  color: var(--muted-color);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+
+  &.is-on {
+    background: var(--control-bg);
+    color: var(--text-color);
+    font-weight: 600;
+  }
+
+  &:not(.is-on) .Vantage-chipSwatch {
+    opacity: 0.35;
+  }
+}
+
+.Vantage-chipSwatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--vantage-c);
+  flex-shrink: 0;
+}
+
+.Vantage-chart {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: 200px auto;
+  column-gap: 8px;
+}
+
+.Vantage-chartAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: right;
+  font-size: 11px;
+  color: var(--muted-color);
+  line-height: 1;
+}
+
+.Vantage-chartPlot {
+  position: relative;
+  min-width: 0;
+  touch-action: pan-y;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+}
+
+.Vantage-chartGrid {
+  stroke: var(--control-bg);
+  stroke-width: 1;
+}
+
+.Vantage-chartLine {
+  fill: none;
+  stroke: var(--vantage-c);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.Vantage-chartCursor {
+  stroke: var(--muted-color);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.Vantage-chartEmpty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--muted-color);
+  font-size: 13px;
+}
+
+.Vantage-chartDates {
+  grid-column: 2;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted-color);
+  margin-top: 4px;
+}
+
+.Vantage-tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(8px);
+  background: var(--body-bg);
+  color: var(--text-color);
+  border: 1px solid var(--control-bg);
+  border-radius: var(--border-radius, 6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 6px 10px;
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &.is-left {
+    transform: translateX(~"calc(-100% - 8px)");
+  }
+}
+
+.Vantage-tipRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.Vantage-peak {
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--text-color);
+}
+
+.Vantage-heat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.Vantage-heatRow {
+  display: grid;
+  grid-template-columns: 32px repeat(24, minmax(0, 1fr));
+  gap: 2px;
+  align-items: center;
+}
+
+.Vantage-heatDay,
+.Vantage-heatHour {
+  font-size: 11px;
+  color: var(--muted-color);
+  white-space: nowrap;
+}
+
+.Vantage-heatCell {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--control-bg);
+
+  &[data-level='1'] { background: ~"color-mix(in srgb, var(--primary-color) 25%, var(--control-bg))"; }
+  &[data-level='2'] { background: ~"color-mix(in srgb, var(--primary-color) 50%, var(--control-bg))"; }
+  &[data-level='3'] { background: ~"color-mix(in srgb, var(--primary-color) 75%, var(--control-bg))"; }
+  &[data-level='4'] { background: var(--primary-color); }
+}
+
+.Vantage-tableWrap {
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+.Vantage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th, td {
+    text-align: right;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--control-bg);
+    color: var(--text-color);
+    white-space: nowrap;
+  }
+
+  th:first-child {
+    text-align: left;
+  }
+
+  thead th {
+    color: var(--muted-color);
+    font-weight: 600;
+    font-size: 12px;
+  }
+}
+
+.Vantage-top {
+  margin: 0;
+  padding-left: 20px;
+
+  li {
+    margin-bottom: 10px;
+    color: var(--muted-color);
+  }
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-decoration: none;
+    min-width: 0;
+  }
+}
+
+.Vantage .Vantage-topExcerpt {
+  color: var(--text-color);
+  overflow-wrap: anywhere;
+}
+
+.Vantage .Vantage-topMeta {
+  color: var(--muted-color);
+  font-size: 12px;
+}
+
+.Vantage-audience {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(~"min(220px, 100%)", 1fr));
+  gap: 16px;
+}
+
+.Vantage-bars {
+  min-width: 0;
+
+  h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 7em) minmax(0, 1fr) 3.5em;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+}
+
+.Vantage-barLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color);
+}
+
+.Vantage-barTrack {
+  height: 8px;
+  background: var(--control-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.Vantage-barFill {
+  display: block;
+  height: 100%;
+  background: var(--primary-color);
+}
+
+.Vantage-barValue {
+  text-align: right;
+  color: var(--muted-color);
+}
+
+.Vantage--locked {
+  position: relative;
+}
+
+.Vantage-lockedSample {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(~"min(140px, 100%)", 1fr));
+  gap: 10px;
+  filter: blur(2px);
+  opacity: 0.6;
+  margin-bottom: 16px;
+}
+
+.Vantage-lockedText {
+  h2 {
+    font-size: 18px;
+    margin: 0 0 8px;
+  }
+
+  p {
+    color: var(--text-color);
+  }
+
+  .Vantage-lockedWho {
+    color: var(--muted-color);
+    font-weight: 600;
+  }
+}
+
+.Settings-vantageFields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--text-color);
+    min-width: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .Vantage-tileValue {
+    font-size: 20px;
+  }
+
+  .Vantage-heatRow {
+    grid-template-columns: 28px repeat(24, minmax(0, 1fr));
+    gap: 1px;
+  }
+
+  .Vantage-heatHour {
+    font-size: 9px;
+  }
+
+  .Vantage-chart {
+    grid-template-rows: 160px auto;
+  }
+}

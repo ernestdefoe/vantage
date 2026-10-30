@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "name": "@ernestdefoe/vantage",
+  "version": "0.1.0",
+  "devDependencies": {
+    "@flarum/prettier-config": "^1.0.0",
+    "flarum-tsconfig": "^2.0.0",
+    "flarum-webpack-config": "^3.1.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "typescript-coverage-report": "^2.1.2",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^7.2.3"
+  },
+  "scripts": {
+    "dev": "webpack --mode development --watch",
+    "build": "webpack --mode production",
+    "check-typings": "tsc --noEmit --project tsconfig.json",
+    "format": "prettier --write src",
+    "format-check": "prettier --check src",
+    "check-typings-coverage": "typescript-coverage-report"
+  },
+  "prettier": "@flarum/prettier-config"
+}
