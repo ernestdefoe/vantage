@@ -72,14 +72,20 @@ class HitController implements RequestHandlerInterface
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        return $this->recorder->impressions($reader, $authors, $discussion) > 0;
+        return $this->recorder->impressions($reader, $authors) > 0;
     }
 
     private function profile(User $actor, \ErnestDefoe\Vantage\Tracking\Reader $reader, int $userId): bool
     {
         $user = $userId ? User::query()->whereVisibleTo($actor)->find($userId) : null;
 
-        return $user ? $this->recorder->profileVisit($reader, (int) $user->id) : false;
+        if (! $user) {
+            return false;
+        }
+
+        $this->recorder->profileVisit($reader, (int) $user->id);
+
+        return true;
     }
 
     private function share(User $actor, \ErnestDefoe\Vantage\Tracking\Reader $reader, int $postId): bool
@@ -90,6 +96,8 @@ class HitController implements RequestHandlerInterface
             return false;
         }
 
-        return $this->recorder->share($reader, (int) $post->user_id, (int) $post->id);
+        $this->recorder->share($reader, (int) $post->user_id, (int) $post->id);
+
+        return true;
     }
 }

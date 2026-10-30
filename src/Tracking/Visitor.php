@@ -46,7 +46,9 @@ class Visitor
                 return null;
             }
 
-            return new Reader('g'.$this->guestHash($request, $agent), true, $this->country->of($request));
+            $ip = (string) $request->getAttribute('ipAddress', '');
+
+            return new Reader($this->hash('g|'.$ip.'|'.$agent), true, $this->country->of($request), source: $this->hash('ip|'.$ip));
         }
 
         if ($actor->getPreference('vantageNoCount')) {
@@ -55,7 +57,7 @@ class Visitor
 
         [$age, $gender] = $this->demographics($actor);
 
-        return new Reader('u'.$actor->id, false, $this->country->of($request), $age, $gender);
+        return new Reader($this->hash('u|'.$actor->id), false, $this->country->of($request), $age, $gender);
     }
 
     /** @return array{0: ?string, 1: ?string} */
@@ -92,20 +94,20 @@ class Visitor
     }
 
     /**
-     * A guest is a salted hash that changes every day. The salt lives only in
-     * the cache, so yesterday's hashes can't be recomputed, and no IP or user
-     * agent is ever written anywhere.
+     * A reader is a hash with a salt that changes every day and lives only in
+     * the cache, so yesterday's hashes can't be recomputed, and no IP, user
+     * agent or member id is ever written anywhere.
      */
-    private function guestHash(ServerRequestInterface $request, string $agent): string
+    private function hash(string $value): string
     {
         $day = Carbon::now('UTC')->format('Ymd');
         $salt = $this->cache->get("vantage:salt:$day");
 
         if (! is_string($salt)) {
-            $salt = Str::random(32);
+            $salt = Str::random(40);
             $this->cache->put("vantage:salt:$day", $salt, 60 * 60 * 26);
         }
 
-        return substr(hash('sha256', $salt.'|'.$request->getAttribute('ipAddress', '').'|'.$agent), 0, 20);
+        return substr(hash('sha256', $salt.'|'.$value), 0, 16);
     }
 }

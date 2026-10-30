@@ -25,6 +25,12 @@ class Rollup
     /** Breakdown rows (hours, countries, age, gender, types) live this long. */
     public const DETAIL_DAYS = 90;
 
+    /** Views one guest (an IP and browser) can add in a day… */
+    public const GUEST_CAP = 400;
+
+    /** …and one IP address, however many browsers it claims to be. */
+    public const IP_CAP = 2000;
+
     public function __construct(
         private ConnectionInterface $db,
         private Cache $cache,
@@ -83,17 +89,15 @@ class Rollup
 
         $rows = $this->db->table('vantage_buffer')
             ->whereBetween('id', [(int) $min, $max])
-            ->groupBy('user_id', 'post_id', 'metric', 'hour', 'country', 'age', 'gender', 'guest')
-            ->selectRaw('user_id, post_id, metric, hour, country, age, gender, guest, SUM(n) as n, COUNT(*) as c')
-            ->get();
+            ->orderBy('id')
+            ->get(['user_id', 'post_id', 'metric', 'hour', 'country', 'age', 'gender', 'guest', 'reader', 'src', 'n']);
 
-        $types = $this->typesOf($rows->pluck('post_id')->filter()->unique()->all());
+        $accepted = $this->dedupe($rows->all());
+        $types = $this->typesOf(array_unique(array_filter(array_map(fn ($row) => $row->post_id, $accepted))));
         $daily = [];
         $views = [];
-        $count = 0;
 
-        foreach ($rows as $row) {
-            $count += (int) $row->c;
+        foreach ($accepted as $row) {
             $n = (int) $row->n;
             $hour = Carbon::parse($row->hour, 'UTC');
             $day = $hour->format('Y-m-d');
@@ -136,7 +140,104 @@ class Rollup
             $this->db->table('vantage_buffer')->whereBetween('id', [(int) $min, $max])->delete();
         });
 
-        return $count;
+        return $rows->count();
+    }
+
+    /**
+     * Once per reader, item and day; and a guest (an IP and browser) or a
+     * whole IP can only add so many views a day, so rotating the browser's
+     * name doesn't inflate anyone's numbers.
+     *
+     * The keys already counted live in `vantage_seen`: read for this slice in
+     * one query per thousand keys, written back in batches.
+     *
+     * @param list<object> $rows
+     * @return list<object>
+     */
+    private function dedupe(array $rows): array
+    {
+        $keyOf = function (object $row): ?string {
+            if (! $row->reader) {
+                return null; // unfollows: counted as they come
+            }
+
+            $item = $row->metric === Recorder::IMPRESSION || $row->metric === Recorder::SHARE ? $row->post_id : $row->user_id;
+
+            return substr(hash('sha256', $row->reader.'|'.$row->metric.'|'.$item), 0, 16);
+        };
+
+        $capKeys = fn (object $row) => $row->guest && $row->metric === Recorder::IMPRESSION
+            ? [substr(hash('sha256', 'cap|'.$row->reader), 0, 16) => self::GUEST_CAP, substr(hash('sha256', 'capip|'.$row->src), 0, 16) => self::IP_CAP]
+            : [];
+
+        // Every key this slice could touch, per day.
+        $wanted = [];
+
+        foreach ($rows as $row) {
+            $day = substr((string) $row->hour, 0, 10);
+
+            if ($k = $keyOf($row)) {
+                $wanted[$day][$k] = true;
+            }
+
+            foreach ($capKeys($row) as $k => $cap) {
+                $wanted[$day][$k] = true;
+            }
+        }
+
+        $seen = [];
+
+        foreach ($wanted as $day => $keys) {
+            foreach (array_chunk(array_keys($keys), 1000) as $chunk) {
+                foreach ($this->db->table('vantage_seen')->where('day', $day)->whereIn('k', $chunk)->get(['k', 'n']) as $hit) {
+                    $seen[$day][$hit->k] = (int) $hit->n;
+                }
+            }
+        }
+
+        $accepted = [];
+        $touched = [];
+
+        foreach ($rows as $row) {
+            $day = substr((string) $row->hour, 0, 10);
+            $k = $keyOf($row);
+
+            if ($k !== null && isset($seen[$day][$k])) {
+                continue;
+            }
+
+            $caps = $capKeys($row);
+
+            foreach ($caps as $ck => $cap) {
+                if (($seen[$day][$ck] ?? 0) >= $cap) {
+                    continue 2;
+                }
+            }
+
+            foreach ($caps as $ck => $cap) {
+                $seen[$day][$ck] = ($seen[$day][$ck] ?? 0) + 1;
+                $touched[$day][$ck] = true;
+            }
+
+            if ($k !== null) {
+                $seen[$day][$k] = 1;
+                $touched[$day][$k] = true;
+            }
+
+            $accepted[] = $row;
+        }
+
+        foreach ($touched as $day => $keys) {
+            foreach (array_chunk(array_keys($keys), 500) as $chunk) {
+                $this->db->table('vantage_seen')->upsert(
+                    array_map(fn ($k) => ['day' => $day, 'k' => $k, 'n' => $seen[$day][$k]], $chunk),
+                    ['day', 'k'],
+                    ['n']
+                );
+            }
+        }
+
+        return $accepted;
     }
 
     /**
@@ -238,6 +339,8 @@ class Rollup
         }
 
         $this->settingsRepo->set($key, $today);
+
+        $this->db->table('vantage_seen')->where('day', '<', Carbon::now('UTC')->subDay()->toDateString())->delete();
 
         $this->db->table('vantage_daily')
             ->where('dim', '!=', '')

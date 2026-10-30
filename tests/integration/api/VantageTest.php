@@ -218,6 +218,34 @@ class VantageTest extends TestCase
     }
 
     #[Test]
+    public function a_profile_loaded_as_an_image_is_not_a_visit(): void
+    {
+        // ![](/api/users/3) in a post must not count everyone who reads it.
+        $this->json('GET', '/api/users/3', 2, null, [], ['Sec-Fetch-Dest' => 'image']);
+        $this->json('GET', '/api/users/3', 4, null, [], ['Sec-Fetch-Dest' => 'empty']);
+        $this->rollup();
+
+        $this->assertSame(1, $this->totals(3)['pv|'] ?? 0);
+    }
+
+    #[Test]
+    public function the_same_post_counts_once_per_reader_a_day_across_rollups(): void
+    {
+        $hit = fn (string $agent) => $this->json('POST', '/api/vantage/hit', null, ['type' => 'seen', 'discussion' => 1, 'numbers' => [1]], [], ['User-Agent' => $agent]);
+
+        $hit(self::BROWSER);
+        $this->rollup();
+        $hit(self::BROWSER);
+        $this->rollup();
+        // Another browser on the same connection is another reader.
+        $hit(self::BROWSER.' Firefox/140.0');
+        $this->rollup();
+
+        $this->assertSame(2, $this->totals(3)['imp|'] ?? 0);
+        $this->assertSame(2, $this->totals(3)['rd|'] ?? 0);
+    }
+
+    #[Test]
     public function a_share_click_credits_the_posts_author(): void
     {
         $this->json('POST', '/api/vantage/hit', 2, ['type' => 'share', 'post' => 1]);
