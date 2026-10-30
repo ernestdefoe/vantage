@@ -18,6 +18,18 @@ class CountProfileVisit
     {
         $actor = $context->getActor();
 
+        /*
+         * 🚨 Not when the browser is loading the URL as an image (or a frame,
+         * a script…): a post with ![](/api/users/5) in it would otherwise
+         * count a visit from everyone who reads that post. The forum's own
+         * requests are "empty" (fetch) or "document" (a direct page load).
+         */
+        $dest = $context->request->getHeaderLine('Sec-Fetch-Dest');
+
+        if ($dest !== '' && $dest !== 'empty' && $dest !== 'document') {
+            return $user;
+        }
+
         if ($user instanceof User && ! $actor->isGuest() && $actor->id !== $user->id) {
             $reader = resolve(Visitor::class)->for($actor, $context->request);
 
