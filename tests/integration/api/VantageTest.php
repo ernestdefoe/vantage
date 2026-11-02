@@ -12,6 +12,7 @@ use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use Illuminate\Contracts\Events\Dispatcher;
 use PHPUnit\Framework\Attributes\Test;
 
 class VantageTest extends TestCase
@@ -154,6 +155,38 @@ class VantageTest extends TestCase
         $this->rollup();
 
         $this->assertSame([], $this->totals(3));
+    }
+
+    #[Test]
+    public function an_opted_out_read_saved_outside_a_request_is_not_counted(): void
+    {
+        $this->app();
+        $user = User::find(2);
+        $user->setPreference('vantageNoCount', true);
+        $user->save();
+
+        // A read saved by code with no request of the reader's own.
+        $state = Discussion::find(1)->stateFor($user);
+        $state->read(7);
+        $state->save();
+
+        $events = $this->app()->getContainer()->make(Dispatcher::class);
+
+        foreach ($state->releaseEvents() as $event) {
+            $events->dispatch($event);
+        }
+
+        $this->rollup();
+
+        $this->assertSame([], $this->totals(3));
+    }
+
+    #[Test]
+    public function the_install_day_is_remembered(): void
+    {
+        $this->app();
+
+        $this->assertSame(Carbon::now('UTC')->toDateString(), $this->database()->table('settings')->where('key', 'ernestdefoe-vantage.installed_on')->value('value'));
     }
 
     #[Test]

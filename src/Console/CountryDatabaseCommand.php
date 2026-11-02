@@ -13,6 +13,9 @@ use Throwable;
 /**
  * Keeps DB-IP's free country file (CC BY 4.0) in storage/vantage, refreshed
  * monthly. Only the file is downloaded; no visitor data is ever sent.
+ *
+ * Plain file functions on purpose: the MaxMind reader opens a local path, so a
+ * Filesystem disk (possibly S3) would only add a copy step.
  */
 class CountryDatabaseCommand extends Command
 {

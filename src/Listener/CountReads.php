@@ -41,9 +41,14 @@ class CountReads
         $actor = $request ? RequestUtil::getActor($request) : null;
 
         // Only the reader whose read this is; never a stranger's preferences.
+        // A read saved outside their own request (a console command, a queued
+        // job) loads the member, so their "don't count me" choice still holds.
         if (! $actor || $actor->id !== (int) $state->user_id) {
-            $actor = new User();
-            $actor->id = (int) $state->user_id;
+            $actor = User::query()->find((int) $state->user_id);
+
+            if (! $actor) {
+                return;
+            }
         }
 
         $reader = $this->visitor->for($actor, $request);

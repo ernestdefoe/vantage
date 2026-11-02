@@ -3,6 +3,9 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 
+// Two tables in one migration, so the up/down closures Migration::createTable()
+// would generate are written out. Renaming or splitting it now would re-run it
+// on forums that already have both tables.
 return [
     'up' => function (Builder $schema) {
         // Lifetime views of one post: the free number under every post.
