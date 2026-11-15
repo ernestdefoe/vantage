@@ -3,12 +3,11 @@ import { extend } from 'flarum/common/extend';
 import CommentPost from 'flarum/forum/components/CommentPost';
 import UserPage from 'flarum/forum/components/UserPage';
 import SessionDropdown from 'flarum/forum/components/SessionDropdown';
-import DiscussionPage from 'flarum/forum/components/DiscussionPage';
 import LinkButton from 'flarum/common/components/LinkButton';
 import ItemList from 'flarum/common/utils/ItemList';
 import abbreviateNumber from 'flarum/common/utils/abbreviateNumber';
 import Icon from 'flarum/common/components/Icon';
-import { flush, guestProfile, guestRead, listen } from './tracker';
+import { guestProfile, listen, unwatch, watch } from './tracker';
 import { settingsItems } from './settings';
 
 declare const m: import('mithril').Static;
@@ -57,12 +56,18 @@ app.initializers.add('ernestdefoe/vantage', () => {
     );
   });
 
-  // Guests: the posts that scrolled past, sent once when they leave.
-  extend(DiscussionPage.prototype, 'positionChanged', function (this: any, _r: unknown, start: number, end: number) {
-    const id = this.discussion?.id?.();
-    if (id) guestRead(Number(id), start, end);
+  // Views: each post in a discussion counts once it has been on screen for a
+  // second (see tracker.ts). Not your own posts: nobody views their own work.
+  extend(CommentPost.prototype, 'oncreate', function (this: any) {
+    const post = this.attrs.post;
+    const me = app.session.user;
+    if (me && post.user?.() === me) return;
+
+    watch(this.element, Number(post.discussion?.()?.id?.()), Number(post.number?.()));
   });
-  extend(DiscussionPage.prototype, 'onremove', () => flush());
+  extend(CommentPost.prototype, 'onremove', function (this: any) {
+    unwatch(this.element);
+  });
 
   extend(UserPage.prototype, 'show', function (this: any, _r: unknown, user: any) {
     if (user?.id?.()) guestProfile(user.id());

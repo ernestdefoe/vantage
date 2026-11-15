@@ -144,6 +144,11 @@ export default class Dashboard extends Component<{ user: any }> {
         ) : (
           <div className={'Vantage-body' + (this.loading ? ' is-loading' : '')}>
             {this.data.since && <p className="Vantage-since">{t('since', { date: dayjs(this.data.since).format('LL') })}</p>}
+            {this.data.imported && (
+              <p className="Vantage-since Vantage-imported">
+                {t('imported', { count: number(this.data.imported.views), date: dayjs(this.data.imported.on).format('LL') })}
+              </p>
+            )}
             {this.tiles()}
             {this.chart()}
             {this.bestTimes()}

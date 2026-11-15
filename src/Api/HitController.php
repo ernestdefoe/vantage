@@ -2,6 +2,8 @@
 
 namespace ErnestDefoe\Vantage\Api;
 
+use ErnestDefoe\Vantage\Rollup;
+use ErnestDefoe\Vantage\Tracking\HitLimiter;
 use ErnestDefoe\Vantage\Tracking\Recorder;
 use ErnestDefoe\Vantage\Tracking\Visitor;
 use Flarum\Http\RequestUtil;
@@ -16,8 +18,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * POST /api/vantage/hit — what only the browser can tell us.
  *
- *   seen     a guest's posts that were on screen (members are counted by the
- *            read tracker, without this request)
+ *   seen     posts that were on screen for a second (anyone; members are
+ *            also counted by the read tracker, and the rollup counts a
+ *            reader once per post per day)
  *   profile  a guest opened a profile (members: the user endpoint itself)
  *   share    anyone clicked a share button
  *
@@ -28,7 +31,7 @@ class HitController implements RequestHandlerInterface
 {
     private const MAX_NUMBERS = 60;
 
-    public function __construct(private Recorder $recorder, private Visitor $visitor)
+    public function __construct(private Recorder $recorder, private Visitor $visitor, private HitLimiter $limiter, private Rollup $rollup)
     {
     }
 
@@ -39,13 +42,19 @@ class HitController implements RequestHandlerInterface
         $type = (string) Arr::get($body, 'type');
         $reader = $this->visitor->for($actor, $request);
 
-        if ($reader) {
+        if ($reader && $this->limiter->allow($reader)) {
             match ($type) {
-                'seen' => $actor->isGuest() && $this->seen($actor, $reader, $body),
+                'seen' => $this->seen($actor, $reader, $body),
                 'profile' => $actor->isGuest() && $this->profile($actor, $reader, (int) Arr::get($body, 'user')),
                 'share' => $this->share($actor, $reader, (int) Arr::get($body, 'post')),
                 default => null,
             };
+        }
+
+        // Forums without a scheduler still get their numbers folded in: one
+        // request in fifty does the rollup's work (under its lock).
+        if (random_int(1, 50) === 1 && $this->rollup->pending()) {
+            $this->rollup->run(1);
         }
 
         return new EmptyResponse(204);
@@ -68,6 +77,8 @@ class HitController implements RequestHandlerInterface
             ->whereIn('posts.number', $numbers)
             ->where('posts.type', 'comment')
             ->whereNotNull('posts.user_id')
+            // Nobody views their own posts.
+            ->when(! $actor->isGuest(), fn ($q) => $q->where('posts.user_id', '!=', $actor->id))
             ->pluck('posts.user_id', 'posts.id')
             ->map(fn ($id) => (int) $id)
             ->all();

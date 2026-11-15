@@ -1,6 +1,9 @@
 import app from 'flarum/admin/app';
+import Button from 'flarum/common/components/Button';
 
-const t = (key: string) => app.translator.trans('ernestdefoe-vantage.admin.' + key);
+declare const m: import('mithril').Static;
+
+const t = (key: string, params?: Record<string, unknown>) => app.translator.trans('ernestdefoe-vantage.admin.' + key, params as any);
 const S = 'ernestdefoe-vantage.';
 
 app.initializers.add('ernestdefoe/vantage', () => {
@@ -35,6 +38,7 @@ app.initializers.add('ernestdefoe/vantage', () => {
       label: t('settings.country_header_label'),
       help: t('settings.country_header_help'),
     })
+    .registerSetting(() => importSetting(), -10)
     .registerSetting({
       setting: S + 'retention_months',
       type: 'number',
@@ -50,3 +54,31 @@ app.initializers.add('ernestdefoe/vantage', () => {
     .registerPermission({ icon: 'fas fa-chart-line', label: t('permissions.view_dashboard'), permission: 'vantage.viewDashboard' }, 'start')
     .registerPermission({ icon: 'fas fa-chart-line', label: t('permissions.view_others'), permission: 'vantage.viewOthers' }, 'moderate');
 });
+
+/** The one-time FoF Discussion Views import: a button, shown only when there's something to import. */
+const importState: { loading: boolean; result: any } = { loading: false, result: null };
+
+function importSetting() {
+  if (!app.forum.attribute('vantageDiscussionViews')) return null;
+
+  const run = () => {
+    importState.loading = true;
+    app
+      .request<{ members: number; views: number }>({ method: 'POST', url: app.forum.attribute('apiUrl') + '/vantage/import-discussion-views' })
+      .then((r) => {
+        importState.result = t('settings.import_done', { views: r.views.toLocaleString(), count: r.members });
+      })
+      .catch(() => {})
+      .finally(() => {
+        importState.loading = false;
+        m.redraw();
+      });
+  };
+
+  return m('.Form-group.VantageImport', [
+    m('label', t('settings.import_label')),
+    m('.helpText', t('settings.import_help')),
+    m(Button, { className: 'Button', loading: importState.loading, onclick: run }, t('settings.import_button')),
+    importState.result ? m('p.helpText', importState.result) : null,
+  ]);
+}

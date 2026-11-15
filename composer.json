@@ -72,6 +72,7 @@
         "flarum/mentions": "^2.0",
         "flarum/phpstan": "^2.0",
         "flarum/testing": "^2.0",
+        "fof/discussion-views": "^2.0",
         "ianm/follow-users": "^2.0"
     },
     "scripts": {

@@ -39,11 +39,12 @@ Because the dashboard is a group permission, you can give it however you like: b
 
 ## Light on your forum
 
-- **Members are counted without any extra request.** Flarum already saves how far a member has read, and Vantage counts the posts between their old and new position.
-- **Guests are counted from their browser:** one small request when they leave a discussion. Crawlers and Global Privacy Control are skipped. A setting turns guest counting off.
-- **Counts are written in one batched insert** and folded into daily history every 15 minutes (or when a dashboard is opened, so forums without cron still work).
+- **A view is a post that was on screen for a second.** The browser sends the posts a visitor has seen in one small request every few seconds while they read, so a visit counts even when they only read the first post, or close an in-app browser (Facebook, Instagram, X, Telegram) without leaving the page normally. Each reader counts once per post per day.
+- **Members are also counted from Flarum's own read position**, which it already saves, with no extra request.
+- **Crawlers and Global Privacy Control are skipped**, and a script hammering the counter is cut off. A setting turns guest counting off.
+- **Counts are written in one batched insert** and folded into daily history every 15 minutes by the scheduler. Without a scheduler they are folded in whenever a dashboard is opened and every so often as visitors read, so nothing waits.
 - **The views under posts cost one query** for the whole page of posts.
-- **The script every visitor downloads is about 3.4 KB gzipped.** The dashboard is its own chunk, loaded only when it's opened.
+- **The script every visitor downloads is about 3.8 KB gzipped.** The dashboard is its own chunk, loaded only when it's opened.
 
 ## Privacy
 
@@ -61,12 +62,17 @@ php flarum migrate
 php flarum cache:clear
 ```
 
-Run Flarum's scheduler (`php flarum schedule:run` every minute) for the 15-minute rollup and the monthly country file. Without it, numbers are folded in whenever a dashboard is opened.
+Running Flarum's scheduler (`php flarum schedule:run` every minute) is recommended for the 15-minute rollup and the monthly country file, but not required: without it, numbers are folded in whenever a dashboard is opened and as visitors read.
+
+### Coming from FoF Discussion Views?
+
+Vantage starts counting the day it's installed. To give members their history, use **Import totals** on Vantage's settings page (or `php flarum vantage:import-discussion-views`). Each member gets the Discussion Views totals of the discussions they started, shown under "All time" as imported. They're kept apart from Vantage's own views because Discussion Views counts every time a discussion page is opened (and keeps no dates), while Vantage counts each post a reader saw, once a day. Running it again replaces the earlier import.
 
 ## Commands
 
 - `php flarum vantage:rollup` folds waiting counts into history (`--prune` also merges old days into months).
 - `php flarum vantage:country-database --force` downloads the DB-IP country file now.
+- `php flarum vantage:import-discussion-views` imports FoF Discussion Views' totals (see above).
 
 ## License
 

@@ -11,8 +11,10 @@
 
 use ErnestDefoe\Vantage\Api;
 use ErnestDefoe\Vantage\Console\CountryDatabaseCommand;
+use ErnestDefoe\Vantage\Console\ImportDiscussionViewsCommand;
 use ErnestDefoe\Vantage\Console\RollupCommand;
 use ErnestDefoe\Vantage\Gdpr\VantageData;
+use ErnestDefoe\Vantage\Import\DiscussionViews;
 use ErnestDefoe\Vantage\Listener;
 use ErnestDefoe\Vantage\PostViews;
 use ErnestDefoe\Vantage\Settings;
@@ -69,6 +71,7 @@ return [
 
     (new Extend\Routes('api'))
         ->post('/vantage/hit', 'vantage.hit', Api\HitController::class)
+        ->post('/vantage/import-discussion-views', 'vantage.import', Api\ImportController::class)
         ->get('/vantage/{id:[0-9]+}/export', 'vantage.export', Api\ExportController::class)
         ->get('/vantage/{id:[0-9]+}', 'vantage.stats', Api\StatsController::class),
 
@@ -121,6 +124,10 @@ return [
         ->fields(fn () => [
             Schema\Boolean::make('vantageCanView')
                 ->get(fn ($forum, Context $context) => $context->getActor()->hasPermission('vantage.viewDashboard')),
+            // Admin only: whether FoF Discussion Views' totals can be imported.
+            Schema\Boolean::make('vantageDiscussionViews')
+                ->visible(fn ($forum, Context $context) => $context->getActor()->isAdmin())
+                ->get(fn () => resolve(DiscussionViews::class)->available()),
             Schema\Boolean::make('vantageCanViewOthers')
                 ->get(fn ($forum, Context $context) => $context->getActor()->hasPermission('vantage.viewOthers')),
         ]),
@@ -148,6 +155,7 @@ return [
     (new Extend\Console())
         ->command(RollupCommand::class)
         ->command(CountryDatabaseCommand::class)
+        ->command(ImportDiscussionViewsCommand::class)
         ->schedule(RollupCommand::class, function (Event $event): void {
             $event->everyFifteenMinutes()->withoutOverlapping();
         })

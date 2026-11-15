@@ -15,8 +15,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Visitor
 {
-    /** Anything that announces itself as a program rather than a person. */
-    private const BOTS = '/bot|crawl|spider|slurp|archiver|scrape|headless|lighthouse|pagespeed|preview|monitor|uptime|curl|wget|python|httpclient|okhttp|java\/|go-http|axios|node-fetch|phantom|facebookexternalhit|embedly|whatsapp|telegram|discord|slack/i';
+    /**
+     * Anything that announces itself as a program rather than a person.
+     *
+     * 🚨 Not the apps' names: Telegram, WhatsApp, Discord and Slack open links
+     * in their own browsers, whose user agents name the app, and those are
+     * people. Their link-preview fetchers say "bot" or aren't Mozilla at all.
+     */
+    private const BOTS = '/bot|crawl|spider|slurp|archiver|scrape|headless|lighthouse|pagespeed|preview|monitor|uptime|curl|wget|python|httpclient|okhttp|java\/|go-http|axios|node-fetch|phantom|facebookexternalhit|facebookcatalog|embedly/i';
 
     public const GENDERS = ['woman', 'man', 'nonbinary'];
 
@@ -26,7 +32,7 @@ class Visitor
 
     public static function isBot(string $userAgent): bool
     {
-        return $userAgent === '' || (bool) preg_match(self::BOTS, $userAgent);
+        return ! str_contains($userAgent, 'Mozilla/') || (bool) preg_match(self::BOTS, $userAgent);
     }
 
     public function for(User $actor, ?ServerRequestInterface $request): ?Reader

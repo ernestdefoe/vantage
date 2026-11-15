@@ -3,6 +3,7 @@
 namespace ErnestDefoe\Vantage\Report;
 
 use Carbon\Carbon;
+use ErnestDefoe\Vantage\Import\DiscussionViews;
 use ErnestDefoe\Vantage\PostType;
 use ErnestDefoe\Vantage\Rollup;
 use ErnestDefoe\Vantage\Tracking\Recorder;
@@ -51,6 +52,7 @@ class Report
         private ConnectionInterface $db,
         private ExtensionManager $extensions,
         private SettingsRepositoryInterface $settings,
+        private DiscussionViews $imported,
     ) {
     }
 
@@ -73,7 +75,8 @@ class Report
         $tz = max(-840, min(840, $tz));
         $now = Carbon::now('UTC');
         $all = $days === 0;
-        $joined = $user->joined_at ? Carbon::instance($user->joined_at)->utc() : $now->copy()->subYear();
+        // From the start of the join day: hour buckets begin on the hour.
+        $joined = $user->joined_at ? Carbon::instance($user->joined_at)->utc()->startOfDay() : $now->copy()->subYear();
         $start = $all ? $joined : $now->copy()->subDays($days);
         $prevStart = $all ? null : $start->copy()->subDays($days);
         $from = $prevStart ?? $start;
@@ -137,6 +140,9 @@ class Report
             'types' => $this->types($start, $available),
             'topPosts' => $this->topPosts($start, $now, $available, $viewer ?? $user),
             'audience' => $this->audience($start),
+            // FoF Discussion Views' totals from before, kept apart: page loads
+            // with no dates, not posts seen. All time only.
+            'imported' => $all ? $this->imported->of($this->user) : null,
         ];
     }
 

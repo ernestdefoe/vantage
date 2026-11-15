@@ -229,13 +229,54 @@ class VantageTest extends TestCase
     }
 
     #[Test]
-    public function members_hits_cannot_add_reads_from_the_browser(): void
+    public function a_members_browser_counts_posts_they_saw_without_scrolling_never_their_own(): void
     {
-        // Members are counted by the read tracker only; a crafted "seen" is ignored.
-        $this->json('POST', '/api/vantage/hit', 2, ['type' => 'seen', 'discussion' => 1, 'numbers' => [1, 3, 5]]);
+        // Opening a discussion and reading the first post never moves the read
+        // position past it on a short page; the browser's count still lands.
+        $this->json('POST', '/api/vantage/hit', 2, ['type' => 'seen', 'discussion' => 1, 'numbers' => [1, 3, 5, 7]], [], ['User-Agent' => self::BROWSER]);
+        // The read tracker counting the same posts the same day adds nothing.
+        $this->read(2, 5);
         $this->rollup();
 
-        $this->assertSame([], $this->totals(3));
+        $this->assertSame(3, $this->totals(3)['imp|'] ?? 0);
+        $this->assertSame(0, $this->totals(3)['imp|v:g'] ?? 0);
+        $this->assertSame(2, $this->totals(4)['imp|'] ?? 0);
+        $this->assertSame([], $this->totals(2));
+    }
+
+    #[Test]
+    public function in_app_browsers_are_people_and_link_previews_are_not(): void
+    {
+        $people = [
+            'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 Telegram-Android/11.2.0',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/490.0]',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0',
+            'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 WhatsApp/2.24',
+        ];
+        $previews = ['TelegramBot (like TwitterBot)', 'WhatsApp/2.23.20.0 A', 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)', 'facebookexternalhit/1.1', ''];
+
+        foreach (array_merge($people, $previews) as $agent) {
+            $this->json('POST', '/api/vantage/hit', null, ['type' => 'seen', 'discussion' => 1, 'numbers' => [1]], [], ['User-Agent' => $agent]);
+        }
+
+        $this->rollup();
+
+        $this->assertSame(count($people), $this->totals(3)['imp|'] ?? 0);
+    }
+
+    #[Test]
+    public function the_hit_limiter_drops_a_script_hammering_the_endpoint(): void
+    {
+        $limiter = new \ErnestDefoe\Vantage\Tracking\HitLimiter(new \Illuminate\Cache\Repository(new \Illuminate\Cache\ArrayStore()));
+        $reader = new \ErnestDefoe\Vantage\Tracking\Reader('k', true, source: 'ip');
+
+        $allowed = 0;
+
+        for ($i = 0; $i < \ErnestDefoe\Vantage\Tracking\HitLimiter::LIMIT + 10; $i++) {
+            $allowed += $limiter->allow($reader) ? 1 : 0;
+        }
+
+        $this->assertSame(\ErnestDefoe\Vantage\Tracking\HitLimiter::LIMIT, $allowed);
     }
 
     #[Test]
