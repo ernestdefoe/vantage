@@ -120,7 +120,10 @@ function watcher(): IntersectionObserver | null {
 /** A post in a discussion's stream was drawn: count it once it has been seen. */
 export function watch(el: Element | undefined, discussion: number, number: number) {
   if (!el || !discussion || !number || !counting() || counted.has(discussion + ':' + number)) return;
-  if (!el.closest('.PostStream')) return;
+  // Only on that discussion's own page, not a profile's post list. Asked of
+  // the page, not the markup: themes rebuild the post stream.
+  const current: any = (app.current as any)?.get?.('discussion');
+  if (String(current?.id?.()) !== String(discussion)) return;
 
   const w = watcher();
   if (!w) return;
